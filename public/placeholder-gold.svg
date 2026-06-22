@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600" role="img" aria-label="Aurum gold">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c1c21"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6c878"/>
+      <stop offset="0.5" stop-color="#c8a24a"/>
+      <stop offset="1" stop-color="#9a7a2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <g transform="translate(400 270)">
+    <circle r="92" fill="url(#gold)"/>
+    <text x="0" y="34" font-family="Georgia, serif" font-size="110" font-weight="700"
+      text-anchor="middle" fill="#0c0c0e">A</text>
+  </g>
+  <text x="400" y="430" font-family="Georgia, serif" font-size="38" letter-spacing="6"
+    text-anchor="middle" fill="#c8a24a">AURUM</text>
+  <text x="400" y="470" font-family="system-ui, sans-serif" font-size="16" letter-spacing="3"
+    text-anchor="middle" fill="#6b6b75">CERTIFIED GOLD BULLION</text>
+</svg>

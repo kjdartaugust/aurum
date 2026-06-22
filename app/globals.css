@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-charcoal text-zinc-200 font-sans antialiased;
+  background-image:
+    radial-gradient(circle at 15% -10%, rgba(200, 162, 74, 0.10), transparent 45%),
+    radial-gradient(circle at 90% 10%, rgba(200, 162, 74, 0.06), transparent 40%);
+  background-attachment: fixed;
+}
+
+@layer components {
+  .container-px {
+    @apply mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12;
+  }
+
+  .text-gold-gradient {
+    @apply bg-gold-gradient bg-clip-text text-transparent;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-7 py-3
+      text-sm font-medium tracking-wide transition-all duration-300
+      focus:outline-none focus-visible:ring-2 focus-visible:ring-gold/60;
+  }
+
+  .btn-gold {
+    @apply btn bg-gold-gradient text-charcoal shadow-gold
+      hover:shadow-[0_14px_50px_-10px_rgba(200,162,74,0.6)] hover:-translate-y-0.5;
+  }
+
+  .btn-outline {
+    @apply btn border border-gold/40 text-gold-light
+      hover:border-gold hover:bg-gold/10;
+  }
+
+  .card {
+    @apply rounded-2xl border border-white/5 bg-charcoal-100/80 backdrop-blur
+      shadow-soft transition-all duration-300;
+  }
+
+  .hairline {
+    @apply h-px w-full bg-gradient-to-r from-transparent via-gold/30 to-transparent;
+  }
+
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      #9a7a2e 0%,
+      #e6c878 25%,
+      #fff4d6 50%,
+      #e6c878 75%,
+      #9a7a2e 100%
+    );
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    @apply animate-shimmer;
+  }
+}
+
+/* Thin, on-brand scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #0c0c0e;
+}
+::-webkit-scrollbar-thumb {
+  background: #33333c;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9a7a2e;
+}
