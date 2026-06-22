@@ -10,6 +10,7 @@ interface SpotData {
   currency: string;
   unit: string;
   updatedAt: string;
+  source?: string;
   simulated?: boolean;
 }
 
@@ -43,6 +44,7 @@ export default function GoldTicker({ compact = false }: { compact?: boolean }) {
   }, []);
 
   const up = (data?.change ?? 0) >= 0;
+  const isLive = data != null && !data.simulated && !error;
 
   return (
     <div
@@ -51,11 +53,22 @@ export default function GoldTicker({ compact = false }: { compact?: boolean }) {
       }`}
       aria-live="polite"
       aria-label="Live gold spot price"
+      title={
+        data
+          ? `Source: ${data.source ?? "unknown"} · updated ${new Date(
+              data.updatedAt
+            ).toLocaleTimeString()}`
+          : undefined
+      }
     >
       <span className="relative flex h-2 w-2">
         <span
           className={`absolute inline-flex h-full w-full rounded-full ${
-            error ? "bg-red-500/60" : "bg-emerald-400/70 animate-pulse-soft"
+            error
+              ? "bg-red-500/60"
+              : isLive
+                ? "bg-emerald-400/70 animate-pulse-soft"
+                : "bg-amber-400/70 animate-pulse-soft"
           }`}
         />
       </span>

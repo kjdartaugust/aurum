@@ -1,8 +1,10 @@
 import Link from "next/link";
 import Hero from "@/components/Hero";
 import ProductCatalog from "@/components/ProductCatalog";
+import CertificationsSection from "@/components/CertificationsSection";
 import TrustSection from "@/components/TrustSection";
 import Testimonials from "@/components/Testimonials";
+import BusinessInfo from "@/components/BusinessInfo";
 import QuoteForm from "@/components/QuoteForm";
 
 export default function HomePage() {
@@ -40,8 +42,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      <CertificationsSection />
       <TrustSection />
       <Testimonials />
+      <BusinessInfo />
       <QuoteForm />
     </>
   );

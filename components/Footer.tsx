@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "./Logo";
+import { business } from "@/data/business";
 
 export default function Footer() {
   return (
@@ -12,6 +13,28 @@ export default function Footer() {
               A premium bullion house dealing in certified refined gold and
               responsibly sourced unrefined gold. Wealth you can hold.
             </p>
+            <div className="mt-5 space-y-1 text-sm text-zinc-400">
+              <p className="text-zinc-300">{business.legalName}</p>
+              <p>
+                {business.address.line1}, {business.address.city},{" "}
+                {business.address.country}
+              </p>
+              <p>
+                <a
+                  href={`mailto:${business.email}`}
+                  className="hover:text-gold-light"
+                >
+                  {business.email}
+                </a>{" "}
+                ·{" "}
+                <a
+                  href={`tel:${business.phone.replace(/[^+\d]/g, "")}`}
+                  className="hover:text-gold-light"
+                >
+                  {business.phone}
+                </a>
+              </p>
+            </div>
           </div>
 
           <div>
@@ -25,8 +48,18 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/#certifications" className="hover:text-gold-light">
+                  Certifications
+                </Link>
+              </li>
+              <li>
                 <Link href="/#trust" className="hover:text-gold-light">
                   Why Aurum
+                </Link>
+              </li>
+              <li>
+                <Link href="/#business" className="hover:text-gold-light">
+                  Business info
                 </Link>
               </li>
               <li>
@@ -64,7 +97,10 @@ export default function Footer() {
         <div className="mt-12 hairline" />
 
         <div className="mt-8 flex flex-col items-start justify-between gap-4 text-xs text-zinc-500 sm:flex-row sm:items-center">
-          <p>© {new Date().getFullYear()} Aurum Bullion. All rights reserved.</p>
+          <p>
+            © {new Date().getFullYear()} {business.legalName}. All rights
+            reserved.
+          </p>
           <p className="max-w-xl leading-relaxed">
             Investing in precious metals carries risk; prices fluctuate with the
             market. Aurum is a demonstration storefront — payment and sourcing
