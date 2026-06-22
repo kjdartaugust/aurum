@@ -41,6 +41,7 @@ export default function CartPage() {
   const [order, setOrder] = useState<OrderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<Customer>(emptyCustomer);
+  const [confirmed, setConfirmed] = useState(false);
 
   const lineItems = items
     .map((i) => ({ item: i, product: getProduct(i.id) }))
@@ -248,6 +249,32 @@ export default function CartPage() {
                   .
                 </p>
               )}
+
+              <label className="mt-5 flex items-start gap-3 text-xs text-zinc-400">
+                <input
+                  type="checkbox"
+                  required
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-gold"
+                />
+                <span>
+                  I confirm I am 18+ (or my local age of majority), purchasing
+                  from a permitted jurisdiction, and I accept the{" "}
+                  <Link href="/terms" className="text-gold-light underline">
+                    Terms
+                  </Link>
+                  ,{" "}
+                  <Link href="/refund" className="text-gold-light underline">
+                    Refund Policy
+                  </Link>
+                  , and{" "}
+                  <Link href="/privacy" className="text-gold-light underline">
+                    Privacy Policy
+                  </Link>
+                  .
+                </span>
+              </label>
             </div>
           </div>
 

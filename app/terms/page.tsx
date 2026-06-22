@@ -2,18 +2,37 @@ import type { Metadata } from "next";
 import LegalPage from "@/components/LegalPage";
 
 export const metadata: Metadata = {
-  title: "Terms of Sale",
-  description: "Terms governing the purchase of gold bullion from Aurum.",
+  title: "Terms of Service",
+  description:
+    "Terms governing use of the Aurum storefront and the purchase of gold bullion.",
 };
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms of Sale" updated="June 2026">
+    <LegalPage title="Terms of Service" updated="June 2026">
       <p>
         These terms govern your use of the Aurum storefront and any purchase of
-        gold products. By placing an order or requesting a quote, you agree to
-        them.
+        gold products. By using this site, placing an order, or requesting a
+        quote, you agree to them.
       </p>
+
+      <h2>Eligibility, age & jurisdiction</h2>
+      <ul>
+        <li>
+          You must be at least <strong>18 years old</strong> (or the age of
+          majority in your jurisdiction, whichever is greater) to purchase.
+        </li>
+        <li>
+          You are responsible for ensuring that buying, importing, or holding
+          gold is lawful where you live. We do not sell into jurisdictions where
+          such sales are prohibited or sanctioned.
+          {/* TODO (client): list any countries/regions you do not ship to. */}
+        </li>
+        <li>
+          You confirm you are not on any sanctions or prohibited-persons list and
+          that funds used are from lawful sources.
+        </li>
+      </ul>
 
       <h2>Pricing</h2>
       <p>

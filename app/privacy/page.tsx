@@ -52,6 +52,16 @@ export default function PrivacyPage() {
         access, correction, or deletion of your data by contacting us.
       </p>
 
+      <h2>Cookies</h2>
+      <p>
+        We use essential cookies required for the site and cart to function, and
+        optional cookies to understand usage. You can choose &ldquo;Essential
+        only&rdquo; in the cookie banner; essential cookies cannot be disabled as
+        the site will not work without them.
+        {/* TODO (client): if you add analytics/marketing cookies, list them and
+        their providers here. */}
+      </p>
+
       <h2>Contact</h2>
       <p>
         Questions about this policy? Email{" "}

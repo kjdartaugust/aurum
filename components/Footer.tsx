@@ -82,7 +82,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link href="/terms" className="hover:text-gold-light">
-                  Terms of Sale
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund" className="hover:text-gold-light">
+                  Refund & Returns
                 </Link>
               </li>
               <li>
@@ -102,9 +107,10 @@ export default function Footer() {
             reserved.
           </p>
           <p className="max-w-xl leading-relaxed">
-            Investing in precious metals carries risk; prices fluctuate with the
-            market. Aurum is a demonstration storefront — payment and sourcing
-            integrations are placeholders pending production providers.
+            You must be 18+ (or your local age of majority) to purchase. Gold is
+            not available where its sale is prohibited. Precious-metals prices
+            fluctuate and may fall as well as rise — nothing here is investment
+            advice.
           </p>
         </div>
       </div>
