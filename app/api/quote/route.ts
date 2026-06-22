@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { business } from "@/data/business";
 
 interface QuoteBody {
@@ -13,26 +14,12 @@ interface QuoteBody {
   company?: string;
 }
 
-// --- Naive in-memory rate limit (per warm serverless instance) ---
-const WINDOW_MS = 10 * 60_000;
-const MAX_PER_WINDOW = 5;
-const hits = new Map<string, number[]>();
-
-function rateLimited(ip: string): boolean {
-  const now = Date.now();
-  const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
-  recent.push(now);
-  hits.set(ip, recent);
-  return recent.length > MAX_PER_WINDOW;
-}
-
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export async function POST(request: Request) {
-  const ip =
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = clientIp(request);
 
-  if (rateLimited(ip)) {
+  if (rateLimit(`quote:${ip}`, { max: 5, windowMs: 10 * 60_000 })) {
     return NextResponse.json(
       { error: "Too many requests. Please try again later." },
       { status: 429 }

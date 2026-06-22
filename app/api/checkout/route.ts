@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getProduct } from "@/data/products";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
+import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { business } from "@/data/business";
 import { formatUSD } from "@/lib/format";
 
@@ -66,6 +67,13 @@ function receiptRows(items: LineItem[]): string {
 }
 
 export async function POST(request: Request) {
+  if (rateLimit(`checkout:${clientIp(request)}`, { max: 10, windowMs: 60_000 })) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again shortly." },
+      { status: 429 }
+    );
+  }
+
   let body: CheckoutBody;
   try {
     body = await request.json();

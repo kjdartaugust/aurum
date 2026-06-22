@@ -5,6 +5,8 @@ import { CartProvider } from "@/context/CartContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CookieConsent from "@/components/CookieConsent";
+import StructuredData from "@/components/StructuredData";
+import Analytics from "@/components/Analytics";
 import { SITE_URL } from "@/lib/site";
 
 const sans = Inter({
@@ -40,6 +42,17 @@ export const metadata: Metadata = {
     description:
       "Certified refined bars & coins and ethically sourced unrefined gold. Secure, insured, escrow-backed.",
     type: "website",
+    siteName: "Aurum",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Aurum — Investment-Grade Gold Bullion",
+    description:
+      "Certified refined bars & coins and ethically sourced unrefined gold.",
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 };
 
@@ -51,6 +64,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
+        <StructuredData />
         <CartProvider>
           <a
             href="#main-content"
@@ -65,6 +79,7 @@ export default function RootLayout({
           <Footer />
           <CookieConsent />
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
