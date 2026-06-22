@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bgn" cx="35%" cy="25%" r="90%">
+      <stop offset="0" stop-color="#1c1c21"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </radialGradient>
+    <radialGradient id="nug" cx="38%" cy="32%" r="75%">
+      <stop offset="0" stop-color="#fff0c8"/>
+      <stop offset="0.5" stop-color="#d8b260"/>
+      <stop offset="1" stop-color="#8c6e29"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgn)"/>
+  <ellipse cx="400" cy="430" rx="250" ry="40" fill="#000" opacity="0.4"/>
+  <g fill="url(#nug)" stroke="#6b521f" stroke-width="1.5">
+    <path d="M300 360 q-30 -40 10 -70 q40 -26 80 -6 q34 18 22 56 q-10 38 -54 44 q-40 6 -58 -24 z"/>
+    <path d="M420 380 q-24 -34 16 -58 q44 -22 78 6 q26 24 6 56 q-22 32 -62 28 q-30 -4 -38 -32 z"/>
+    <path d="M360 416 q-20 -28 14 -44 q34 -14 56 8 q18 20 0 42 q-22 24 -50 14 q-16 -6 -20 -20 z"/>
+    <path d="M250 410 q-16 -24 14 -38 q30 -12 48 8 q14 18 -2 36 q-20 20 -44 10 q-12 -6 -16 -16 z"/>
+    <path d="M520 414 q-14 -22 14 -34 q28 -10 44 8 q12 16 -4 32 q-18 18 -40 8 q-10 -6 -14 -14 z"/>
+  </g>
+  <!-- highlights -->
+  <g fill="#fff4d6" opacity="0.4">
+    <circle cx="330" cy="318" r="8"/>
+    <circle cx="452" cy="346" r="7"/>
+    <circle cx="372" cy="392" r="5"/>
+  </g>
+</svg>

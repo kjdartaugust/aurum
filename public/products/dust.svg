@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bgu" cx="35%" cy="25%" r="90%">
+      <stop offset="0" stop-color="#1c1c21"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </radialGradient>
+    <linearGradient id="pile" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0d68f"/>
+      <stop offset="1" stop-color="#9a7a2e"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgu)"/>
+  <ellipse cx="400" cy="438" rx="240" ry="34" fill="#000" opacity="0.4"/>
+  <!-- pile of dust -->
+  <path d="M220 432 Q400 320 580 432 Z" fill="url(#pile)"/>
+  <path d="M220 432 Q400 360 580 432 Z" fill="#7a5f22" opacity="0.35"/>
+  <!-- granules -->
+  <g fill="#f0d68f">
+    <circle cx="300" cy="410" r="3"/><circle cx="340" cy="400" r="2.5"/><circle cx="380" cy="392" r="3"/>
+    <circle cx="420" cy="390" r="2.5"/><circle cx="460" cy="398" r="3"/><circle cx="500" cy="408" r="2.5"/>
+    <circle cx="360" cy="416" r="2"/><circle cx="440" cy="412" r="2"/><circle cx="280" cy="420" r="2"/>
+    <circle cx="520" cy="418" r="2"/>
+  </g>
+  <g fill="#fff4d6" opacity="0.6">
+    <circle cx="356" cy="380" r="2"/><circle cx="404" cy="372" r="2"/><circle cx="452" cy="382" r="2"/>
+  </g>
+  <text x="400" y="478" font-family="system-ui, sans-serif" font-size="17" letter-spacing="3" text-anchor="middle" fill="#6b521f" opacity="0.8">RAW GOLD DUST</text>
+</svg>

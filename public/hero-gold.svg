@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <radialGradient id="hbg" cx="65%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#26262d"/>
+      <stop offset="0.6" stop-color="#121214"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </radialGradient>
+    <linearGradient id="hface" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0d68f"/>
+      <stop offset="0.45" stop-color="#c8a24a"/>
+      <stop offset="1" stop-color="#8c6e29"/>
+    </linearGradient>
+    <linearGradient id="htop" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff4d6"/>
+      <stop offset="0.5" stop-color="#e6c878"/>
+      <stop offset="1" stop-color="#c8a24a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#hbg)"/>
+  <!-- soft gold glow -->
+  <ellipse cx="1120" cy="300" rx="520" ry="420" fill="#c8a24a" opacity="0.10"/>
+  <!-- stacked bars, right side -->
+  <g transform="translate(900 470)">
+    <ellipse cx="160" cy="360" rx="420" ry="60" fill="#000" opacity="0.5"/>
+    <!-- bottom row -->
+    <g>
+      <polygon points="-40,260 360,260 410,210 10,210" fill="url(#htop)"/>
+      <polygon points="-40,260 360,260 360,400 -40,400" fill="url(#hface)"/>
+      <polygon points="360,260 410,210 410,350 360,400" fill="#5e4a1c" opacity="0.6"/>
+    </g>
+    <g>
+      <polygon points="340,260 700,260 750,210 390,210" fill="url(#htop)"/>
+      <polygon points="340,260 700,260 700,400 340,400" fill="url(#hface)"/>
+      <polygon points="700,260 750,210 750,350 700,400" fill="#5e4a1c" opacity="0.65"/>
+    </g>
+    <!-- middle row -->
+    <g>
+      <polygon points="60,130 440,130 490,82 110,82" fill="url(#htop)"/>
+      <polygon points="60,130 440,130 440,262 60,262" fill="url(#hface)"/>
+      <polygon points="440,130 490,82 490,214 440,262" fill="#5e4a1c" opacity="0.6"/>
+    </g>
+    <g>
+      <polygon points="420,130 760,130 810,82 470,82" fill="url(#htop)"/>
+      <polygon points="420,130 760,130 760,262 420,262" fill="url(#hface)"/>
+      <polygon points="760,130 810,82 810,214 760,262" fill="#5e4a1c" opacity="0.65"/>
+    </g>
+    <!-- top bar -->
+    <g>
+      <polygon points="220,0 600,0 650,-46 270,-46" fill="url(#htop)"/>
+      <polygon points="220,0 600,0 600,130 220,130" fill="url(#hface)"/>
+      <polygon points="600,0 650,-46 650,84 600,130" fill="#5e4a1c" opacity="0.6"/>
+      <text x="410" y="78" font-family="Georgia, serif" font-size="40" font-weight="700" text-anchor="middle" fill="#5e4a1c">AURUM</text>
+    </g>
+  </g>
+</svg>

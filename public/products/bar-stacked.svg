@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bg2" cx="35%" cy="25%" r="90%">
+      <stop offset="0" stop-color="#1c1c21"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </radialGradient>
+    <linearGradient id="f2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0d68f"/>
+      <stop offset="0.45" stop-color="#c8a24a"/>
+      <stop offset="1" stop-color="#8c6e29"/>
+    </linearGradient>
+    <linearGradient id="t2" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#fff4d6"/>
+      <stop offset="0.5" stop-color="#e6c878"/>
+      <stop offset="1" stop-color="#c8a24a"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg2)"/>
+  <ellipse cx="400" cy="500" rx="280" ry="36" fill="#000" opacity="0.45"/>
+  <!-- bottom row: two bars -->
+  <g>
+    <polygon points="170,420 420,420 450,392 200,392" fill="url(#t2)"/>
+    <polygon points="170,420 420,420 420,500 170,500" fill="url(#f2)"/>
+    <polygon points="420,420 450,392 450,472 420,500" fill="#7a5f22" opacity="0.55"/>
+  </g>
+  <g>
+    <polygon points="400,420 620,420 650,392 430,392" fill="url(#t2)"/>
+    <polygon points="400,420 620,420 620,500 400,500" fill="url(#f2)"/>
+    <polygon points="620,420 650,392 650,472 620,500" fill="#5e4a1c" opacity="0.6"/>
+  </g>
+  <!-- top bar -->
+  <g>
+    <polygon points="280,320 520,320 552,290 312,290" fill="url(#t2)"/>
+    <polygon points="280,320 520,320 520,406 280,406" fill="url(#f2)"/>
+    <polygon points="520,320 552,290 552,376 520,406" fill="#7a5f22" opacity="0.55"/>
+    <text x="400" y="372" font-family="Georgia, serif" font-size="26" font-weight="700" text-anchor="middle" fill="#5e4a1c">AURUM</text>
+  </g>
+</svg>

@@ -7,12 +7,12 @@ export default function Hero() {
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 -z-10">
         <SafeImage
-          src="https://images.unsplash.com/photo-1610375461246-83df859d849d?auto=format&fit=crop&w=2000&q=80"
+          src="/hero-gold.svg"
           alt="Stacked investment-grade gold bars"
           fill
           priority
           sizes="100vw"
-          className="object-cover opacity-40"
+          className="object-cover opacity-60"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-charcoal via-charcoal/85 to-charcoal/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-transparent to-charcoal/30" />

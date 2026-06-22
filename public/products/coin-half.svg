@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bgh" cx="35%" cy="25%" r="90%">
+      <stop offset="0" stop-color="#1c1c21"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </radialGradient>
+    <radialGradient id="coinh" cx="38%" cy="34%" r="75%">
+      <stop offset="0" stop-color="#fff4d6"/>
+      <stop offset="0.45" stop-color="#e6c878"/>
+      <stop offset="1" stop-color="#a9842f"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgh)"/>
+  <ellipse cx="400" cy="446" rx="120" ry="20" fill="#000" opacity="0.45"/>
+  <circle cx="400" cy="300" r="126" fill="#8c6e29"/>
+  <circle cx="400" cy="300" r="122" fill="none" stroke="#6b521f" stroke-width="3" stroke-dasharray="3 5"/>
+  <circle cx="400" cy="300" r="114" fill="url(#coinh)"/>
+  <circle cx="400" cy="300" r="94" fill="none" stroke="#7a5f22" stroke-width="2.5" opacity="0.6"/>
+  <text x="400" y="278" font-family="Georgia, serif" font-size="28" font-weight="700" text-anchor="middle" fill="#5e4a1c">AURUM</text>
+  <text x="400" y="320" font-family="system-ui, sans-serif" font-size="18" letter-spacing="2" text-anchor="middle" fill="#6b521f">½ oz · 916.7</text>
+  <ellipse cx="362" cy="256" rx="44" ry="22" fill="#fff4d6" opacity="0.25"/>
+</svg>

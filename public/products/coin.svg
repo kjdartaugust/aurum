@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">
+  <defs>
+    <radialGradient id="bgc" cx="35%" cy="25%" r="90%">
+      <stop offset="0" stop-color="#1c1c21"/>
+      <stop offset="1" stop-color="#0c0c0e"/>
+    </radialGradient>
+    <radialGradient id="coin" cx="38%" cy="34%" r="75%">
+      <stop offset="0" stop-color="#fff4d6"/>
+      <stop offset="0.45" stop-color="#e6c878"/>
+      <stop offset="1" stop-color="#a9842f"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bgc)"/>
+  <ellipse cx="400" cy="476" rx="170" ry="26" fill="#000" opacity="0.45"/>
+  <!-- milled edge -->
+  <circle cx="400" cy="300" r="172" fill="#8c6e29"/>
+  <g stroke="#6b521f" stroke-width="3">
+    <!-- reeded edge ticks via dasharray ring -->
+    <circle cx="400" cy="300" r="168" fill="none" stroke-dasharray="4 6"/>
+  </g>
+  <circle cx="400" cy="300" r="158" fill="url(#coin)"/>
+  <circle cx="400" cy="300" r="134" fill="none" stroke="#7a5f22" stroke-width="3" opacity="0.6"/>
+  <text x="400" y="262" font-family="Georgia, serif" font-size="40" font-weight="700" text-anchor="middle" fill="#5e4a1c">AURUM</text>
+  <text x="400" y="312" font-family="system-ui, sans-serif" font-size="20" letter-spacing="3" text-anchor="middle" fill="#6b521f">SOVEREIGN</text>
+  <text x="400" y="352" font-family="system-ui, sans-serif" font-size="22" letter-spacing="2" text-anchor="middle" fill="#6b521f">1 oz · 999.9</text>
+  <!-- highlight -->
+  <ellipse cx="350" cy="244" rx="60" ry="30" fill="#fff4d6" opacity="0.25"/>
+</svg>

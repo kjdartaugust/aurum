@@ -12,6 +12,10 @@ const FALLBACK = "/placeholder-gold.svg";
  */
 export default function SafeImage({ src, alt, ...rest }: ImageProps) {
   const [current, setCurrent] = useState(src);
+  // SVGs (our product art + the fallback) are served as-is; the Next image
+  // optimizer rejects SVG by default.
+  const isSvg =
+    typeof current === "string" && current.toLowerCase().endsWith(".svg");
   const isFallback = current === FALLBACK;
 
   return (
@@ -22,8 +26,8 @@ export default function SafeImage({ src, alt, ...rest }: ImageProps) {
       {...rest}
       src={current}
       alt={alt}
-      // The placeholder is a local SVG; skip optimization for it.
-      unoptimized={isFallback || rest.unoptimized}
+      // SVG sources skip the Next optimizer (which rejects SVG by default).
+      unoptimized={isSvg || isFallback || rest.unoptimized}
       onError={() => setCurrent(FALLBACK)}
     />
   );
