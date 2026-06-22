@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { business } from "@/data/business";
 
 const PRODUCT_INTERESTS = [
   "Refined bars",
@@ -17,7 +18,8 @@ export default function QuoteForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [waLink, setWaLink] = useState<string | null>(null);
 
-  const whatsapp = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "";
+  const whatsapp =
+    process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? business.whatsapp;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -163,7 +165,7 @@ export default function QuoteForm() {
             {status === "error" && (
               <p className="rounded-xl border border-red-500/30 bg-red-500/5 p-4 text-sm text-red-300">
                 Something went wrong. Please email us directly at{" "}
-                {process.env.NEXT_PUBLIC_INQUIRY_EMAIL ?? "sales@aurum.example"}.
+                {process.env.NEXT_PUBLIC_INQUIRY_EMAIL ?? business.email}.
               </p>
             )}
           </form>

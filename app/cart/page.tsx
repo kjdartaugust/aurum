@@ -11,37 +11,65 @@ interface OrderResult {
   orderRef: string;
   total: number;
   provider: string;
+  email: string;
+}
+
+interface Customer {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+  city: string;
+  country: string;
 }
 
 const INSURED_SHIPPING = 75;
+// Above this order value we display a KYC notice (see /compliance).
+const KYC_THRESHOLD = 10_000;
+const emptyCustomer: Customer = {
+  name: "",
+  email: "",
+  phone: "",
+  address: "",
+  city: "",
+  country: "",
+};
 
 export default function CartPage() {
   const { items, subtotal, setQty, remove, clear } = useCart();
   const [placing, setPlacing] = useState(false);
   const [order, setOrder] = useState<OrderResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [customer, setCustomer] = useState<Customer>(emptyCustomer);
 
   const lineItems = items
     .map((i) => ({ item: i, product: getProduct(i.id) }))
     .filter((x) => x.product && x.product.price != null && x.product.buyable);
 
   const total = subtotal + (subtotal > 0 ? INSURED_SHIPPING : 0);
+  const needsKyc = total >= KYC_THRESHOLD;
 
-  async function placeOrder() {
+  function update(field: keyof Customer, value: string) {
+    setCustomer((c) => ({ ...c, [field]: value }));
+  }
+
+  async function placeOrder(e: React.FormEvent) {
+    e.preventDefault();
     setPlacing(true);
     setError(null);
     try {
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items }),
+        body: JSON.stringify({ items, customer }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
       setOrder({
         orderRef: data.orderRef,
-        total: data.total + INSURED_SHIPPING,
+        total: data.total,
         provider: data.provider,
+        email: customer.email,
       });
       clear();
     } catch (e) {
@@ -68,7 +96,9 @@ export default function CartPage() {
             <span className="font-medium text-zinc-100">
               {formatUSD(order.total)}
             </span>
-            . Our vault team will reach out to arrange insured delivery.
+            . A receipt has been sent to{" "}
+            <span className="text-zinc-200">{order.email}</span> and our vault
+            team will arrange insured delivery.
           </p>
           <p className="mt-4 rounded-xl border border-gold/20 bg-gold/5 p-3 text-xs text-zinc-400">
             Demo checkout via <strong>{order.provider}</strong> — no funds were
@@ -103,7 +133,7 @@ export default function CartPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-12 grid gap-10 lg:grid-cols-3">
+        <form onSubmit={placeOrder} className="mt-12 grid gap-10 lg:grid-cols-3">
           <div className="space-y-4 lg:col-span-2">
             {lineItems.map(({ item, product }) => (
               <div key={item.id} className="card flex gap-5 p-5">
@@ -128,6 +158,7 @@ export default function CartPage() {
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => remove(item.id)}
                       className="text-xs text-zinc-500 hover:text-red-400"
                     >
@@ -137,6 +168,7 @@ export default function CartPage() {
                   <div className="mt-auto flex items-center justify-between pt-3">
                     <div className="flex items-center rounded-full border border-white/10">
                       <button
+                        type="button"
                         onClick={() => setQty(item.id, item.qty - 1)}
                         className="px-3 py-1.5 text-zinc-300 hover:text-gold-light"
                         aria-label="Decrease quantity"
@@ -145,6 +177,7 @@ export default function CartPage() {
                       </button>
                       <span className="w-8 text-center text-sm">{item.qty}</span>
                       <button
+                        type="button"
                         onClick={() => setQty(item.id, item.qty + 1)}
                         className="px-3 py-1.5 text-zinc-300 hover:text-gold-light"
                         aria-label="Increase quantity"
@@ -159,6 +192,63 @@ export default function CartPage() {
                 </div>
               </div>
             ))}
+
+            {/* Delivery details */}
+            <div className="card p-7">
+              <h2 className="font-serif text-xl text-zinc-100">
+                Delivery details
+              </h2>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <Input
+                  label="Full name"
+                  value={customer.name}
+                  onChange={(v) => update("name", v)}
+                  required
+                />
+                <Input
+                  label="Email"
+                  type="email"
+                  value={customer.email}
+                  onChange={(v) => update("email", v)}
+                  required
+                />
+                <Input
+                  label="Phone"
+                  value={customer.phone}
+                  onChange={(v) => update("phone", v)}
+                />
+                <Input
+                  label="Country"
+                  value={customer.country}
+                  onChange={(v) => update("country", v)}
+                  required
+                />
+                <div className="sm:col-span-2">
+                  <Input
+                    label="Delivery address"
+                    value={customer.address}
+                    onChange={(v) => update("address", v)}
+                    required
+                  />
+                </div>
+                <Input
+                  label="City"
+                  value={customer.city}
+                  onChange={(v) => update("city", v)}
+                  required
+                />
+              </div>
+              {needsKyc && (
+                <p className="mt-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-200">
+                  Orders of {formatUSD(KYC_THRESHOLD)} or more require identity
+                  verification (KYC) before delivery. See our{" "}
+                  <Link href="/compliance" className="underline">
+                    AML / KYC notice
+                  </Link>
+                  .
+                </p>
+              )}
+            </div>
           </div>
 
           <aside className="card h-fit p-7">
@@ -167,30 +257,53 @@ export default function CartPage() {
               <Row label="Subtotal" value={formatUSD(subtotal)} />
               <Row label="Insured delivery" value={formatUSD(INSURED_SHIPPING)} />
               <div className="hairline my-2" />
-              <Row
-                label="Total"
-                value={formatUSD(total)}
-                emphasize
-              />
+              <Row label="Total" value={formatUSD(total)} emphasize />
             </div>
 
             <button
-              onClick={placeOrder}
+              type="submit"
               disabled={placing}
               className="btn-gold mt-6 w-full disabled:opacity-60"
             >
               {placing ? "Processing…" : "Pay securely"}
             </button>
-            {error && (
-              <p className="mt-3 text-sm text-red-400">{error}</p>
-            )}
+            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
             <p className="mt-4 text-center text-xs text-zinc-500">
               🔒 Demo payment — no funds are charged.
             </p>
           </aside>
-        </div>
+        </form>
       )}
     </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs uppercase tracking-wider text-zinc-500">
+        {label} {required && <span className="text-gold">*</span>}
+      </span>
+      <input
+        type={type}
+        value={value}
+        required={required}
+        onChange={(e) => onChange(e.target.value)}
+        className="rounded-xl border border-white/10 bg-charcoal-100 px-4 py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-gold/50 focus:outline-none"
+      />
+    </label>
   );
 }
 
@@ -210,9 +323,7 @@ function Row({
       }`}
     >
       <span>{label}</span>
-      <span
-        className={emphasize ? "font-serif text-xl text-gold-light" : ""}
-      >
+      <span className={emphasize ? "font-serif text-xl text-gold-light" : ""}>
         {value}
       </span>
     </div>

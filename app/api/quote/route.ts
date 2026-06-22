@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
+import { business } from "@/data/business";
 
 interface QuoteBody {
   name?: string;
@@ -24,50 +26,7 @@ function rateLimited(ip: string): boolean {
   return recent.length > MAX_PER_WINDOW;
 }
 
-function escapeHtml(s: string): string {
-  return s.replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!)
-  );
-}
-
-async function sendEmail(body: QuoteBody): Promise<boolean> {
-  const key = process.env.RESEND_API_KEY;
-  const to = process.env.NEXT_PUBLIC_INQUIRY_EMAIL;
-  const from = process.env.RESEND_FROM ?? "Aurum <onboarding@resend.dev>";
-  if (!key || !to) return false;
-
-  const rows = Object.entries({
-    Name: body.name,
-    Email: body.email,
-    Phone: body.phone,
-    Interest: body.interest,
-    "Quantity / weight": body.quantity,
-    Details: body.message,
-  })
-    .map(
-      ([k, v]) =>
-        `<tr><td style="padding:4px 12px 4px 0;color:#9a7a2e"><b>${k}</b></td>` +
-        `<td style="padding:4px 0">${escapeHtml(String(v ?? "—"))}</td></tr>`
-    )
-    .join("");
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from,
-      to,
-      reply_to: body.email,
-      subject: `New quote request — ${body.interest ?? "gold"} (${body.name})`,
-      html: `<h2 style="font-family:Georgia,serif">New Aurum quote request</h2>
-        <table style="font-family:system-ui,sans-serif;font-size:14px">${rows}</table>`,
-    }),
-  });
-  return res.ok;
-}
+const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export async function POST(request: Request) {
   const ip =
@@ -92,24 +51,43 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, message: "Quote request received." });
   }
 
-  if (!body.name || !body.email) {
+  if (!body.name || !body.email || !isEmail(body.email)) {
     return NextResponse.json(
-      { error: "Name and email are required." },
+      { error: "A valid name and email are required." },
       { status: 422 }
     );
   }
 
-  // Deliver via email if configured; otherwise log so the UX still completes.
-  // The client additionally surfaces a WhatsApp deep link as a second channel.
-  let delivered = false;
-  try {
-    delivered = await sendEmail(body);
-  } catch (e) {
-    console.error("[aurum] quote email failed", e);
-  }
+  const rows = Object.entries({
+    Name: body.name,
+    Email: body.email,
+    Phone: body.phone,
+    Interest: body.interest,
+    "Quantity / weight": body.quantity,
+    Details: body.message,
+  })
+    .map(
+      ([k, v]) =>
+        `<tr><td style="padding:6px 14px 6px 0;color:#9a7a2e;font-weight:600">${k}</td>` +
+        `<td style="padding:6px 0;color:#e4e4e7">${escapeHtml(v ?? "—")}</td></tr>`
+    )
+    .join("");
 
-  if (!delivered) {
-    console.info("[aurum] quote request (not emailed — set RESEND_API_KEY)", {
+  // Notify the business inbox. Falls back to logging if email isn't configured;
+  // the client also offers a WhatsApp deep link as a second channel.
+  const to = process.env.NEXT_PUBLIC_INQUIRY_EMAIL ?? business.email;
+  const result = await sendEmail({
+    to,
+    replyTo: body.email,
+    subject: `New quote request — ${body.interest ?? "gold"} (${body.name})`,
+    html: emailLayout(
+      "New quote request",
+      `<table style="font-size:14px;border-collapse:collapse">${rows}</table>`
+    ),
+  });
+
+  if (!result.ok) {
+    console.info("[aurum] quote (not emailed)", {
       ...body,
       receivedAt: new Date().toISOString(),
     });
