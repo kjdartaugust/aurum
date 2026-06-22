@@ -52,8 +52,16 @@ export default function RootLayout({
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
         <CartProvider>
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[70] focus:rounded-full focus:bg-gold-gradient focus:px-5 focus:py-2 focus:text-sm focus:font-medium focus:text-charcoal"
+          >
+            Skip to content
+          </a>
           <Header />
-          <main className="min-h-screen">{children}</main>
+          <main id="main-content" className="min-h-screen">
+            {children}
+          </main>
           <Footer />
           <CookieConsent />
         </CartProvider>

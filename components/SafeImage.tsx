@@ -16,6 +16,9 @@ export default function SafeImage({ src, alt, ...rest }: ImageProps) {
 
   return (
     <Image
+      // Lighter default compression for heavy gold photos; non-priority images
+      // lazy-load automatically via next/image.
+      quality={70}
       {...rest}
       src={current}
       alt={alt}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import SafeImage from "./SafeImage";
 import { useCart } from "@/context/CartContext";
@@ -8,6 +9,20 @@ import { formatUSD } from "@/lib/format";
 
 export default function CartDrawer() {
   const { items, isOpen, close, setQty, remove, subtotal, count } = useCart();
+
+  // Close on Escape and lock background scroll while the drawer is open.
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [isOpen, close]);
 
   return (
     <>
