@@ -66,6 +66,11 @@ export default function CartPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Checkout failed");
+      // Hosted provider (e.g. Coinbase): send the buyer to complete payment.
+      if (data.redirectUrl) {
+        window.location.href = data.redirectUrl;
+        return;
+      }
       setOrder({
         orderRef: data.orderRef,
         total: data.total,

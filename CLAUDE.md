@@ -26,12 +26,18 @@ If `npm install` hits TLS/cert errors on this machine, prefix with
 
 ## Architecture
 
-- **`data/products.ts` is the single source of truth.** The `Product` type
-  carries `category` (`refined` | `unrefined`), `price` (a `number`, or `null`
-  for quote-only items), and `buyable`. UI behavior keys off these: `buyable`
-  decides "Add to vault" vs "Request a quote", and `price == null` items are
-  excluded from cart totals and checkout. There is no database — add products by
-  editing this array.
+- **Product catalog: content in `data/products.json`, types in
+  `data/products.ts`.** The JSON holds the records (the client edits it without
+  touching code); `products.ts` is a typed loader exporting `products` /
+  `getProduct`. The `Product` type carries `category` (`refined` | `unrefined`),
+  `price` (a `number`, or `null` for quote-only items), and `buyable`. UI keys
+  off these: `buyable` decides "Add to vault" vs "Request a quote", and
+  `price == null` items are excluded from cart totals and checkout.
+
+- **`data/business.ts` is the central business profile** (legal name, address,
+  license, contact, WhatsApp) — full of `// TODO` placeholders the client fills
+  in. It feeds the footer, `BusinessInfo`, `StructuredData` (JSON-LD), and email
+  layouts, so updating it propagates everywhere.
 
 - **Cart is client-side global state** via `context/CartContext.tsx`
   (`useReducer` + React context, wrapped around the app in `app/layout.tsx`).
@@ -43,24 +49,35 @@ If `npm install` hits TLS/cert errors on this machine, prefix with
 
 - **API routes are intentionally self-contained fallbacks** so the app runs with
   zero configuration:
-  - `app/api/gold-price/route.ts` — returns a live price if `GOLD_API_KEY` is
-    set (goldapi.io shape), otherwise a clock-derived **simulated** spot price.
-    `GoldTicker` polls it every 30s.
-  - `app/api/quote/route.ts` — emails the inquiry via Resend when `RESEND_API_KEY`
-    is set, otherwise logs it. Includes a honeypot (`company` field) and a naive
-    per-IP in-memory rate limit. The client also builds a `wa.me` deep link from
-    `NEXT_PUBLIC_WHATSAPP_NUMBER`.
-  - `app/api/checkout/route.ts` — **placeholder payment**. Re-prices the cart
-    server-side from `products` (never trusts client prices) and returns a mock
-    order ref. Bullion is high-risk; a precious-metals-friendly provider must be
-    integrated before launch.
+  - `app/api/gold-price/route.ts` — live spot price. Tries `GOLD_API_KEY`
+    (goldapi.io) → free keyless **gold-api.com** → clock-derived **simulated**
+    fallback. Tracks an intraday open in memory to compute change%. `GoldTicker`
+    polls every 30s (green dot = live, amber = simulated).
+  - `app/api/quote/route.ts` — emails the inquiry via `lib/email.ts` (Resend),
+    else logs it. Honeypot (`company` field) + `lib/rate-limit.ts`. The client
+    also builds a `wa.me` deep link.
+  - `app/api/checkout/route.ts` — re-prices the cart **server-side** from
+    `products` (never trusts client prices), validates customer/delivery, then
+    calls `createPayment()` from **`lib/payments.ts`** (pluggable provider).
+    `mock` (default) confirms instantly and emails receipt + internal
+    notification; a hosted provider (`coinbase`) returns a `redirectUrl` and
+    payment is confirmed later via `app/api/payments/webhook` (stub) — no receipt
+    until then. Rate-limited.
+
+- **Payments are abstracted in `lib/payments.ts`.** Switch providers with the
+  `PAYMENT_PROVIDER` env var; the checkout route and UI don't change. Bullion is
+  high-risk — `mock` charges nothing; `coinbase` is a working crypto reference.
+- **Emails go through `lib/email.ts`** (`sendEmail` + `emailLayout`), which
+  no-ops gracefully without `RESEND_API_KEY`. Error pages: `app/not-found.tsx`,
+  `app/error.tsx`, `app/global-error.tsx`. Analytics: `components/Analytics.tsx`
+  (cookieless Plausible, loads only if `NEXT_PUBLIC_PLAUSIBLE_DOMAIN` is set).
 
 - **Routing:** `app/page.tsx` is the landing page composing the section
   components (`Hero`, `ProductCatalog` preview, `TrustSection`, `Testimonials`,
   `QuoteForm`). `/#trust` and `/#quote` are anchor links into those sections.
   `app/products` is the full catalog; `app/cart` is the checkout flow.
-  `app/privacy`, `app/terms`, `app/compliance` are static legal pages sharing
-  `components/LegalPage.tsx`. SEO is handled by metadata routes:
+  `app/privacy`, `app/terms`, `app/refund`, `app/compliance` are static legal
+  pages sharing `components/LegalPage.tsx`. SEO is handled by metadata routes:
   `app/robots.ts`, `app/sitemap.ts`, `app/icon.svg`, and `app/opengraph-image.tsx`
   (a dynamic `next/og` image — **must** stay on the edge runtime; the Node
   runtime crashes on font loading, and every multi-child `<div>` in it needs an

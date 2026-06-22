@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getProduct } from "@/data/products";
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
+import { createPayment } from "@/lib/payments";
 import { business } from "@/data/business";
 import { formatUSD } from "@/lib/format";
 
@@ -29,30 +30,6 @@ interface LineItem {
 
 const INSURED_SHIPPING = 75;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
-/**
- * ⚠️ PLACEHOLDER PAYMENT PROCESSOR — DOES NOT CHARGE ANY FUNDS.
- *
- * Bullion / precious-metals sales are classified high-risk and are declined by
- * most mainstream processors (Stripe, PayPal, etc.). Before launch, integrate a
- * precious-metals-friendly provider and replace this mock with a real flow.
- *
- * TODO (client): choose & integrate a payment provider, e.g.:
- *   - A high-risk merchant gateway (e.g. PaymentCloud, Durango, Easy Pay Direct)
- *   - Bank wire / escrow for large orders (recommended for bullion)
- *   - Crypto settlement (e.g. BTCPay Server, Coinbase Commerce)
- * Then: create a real payment intent / hosted-checkout session here, verify the
- * payment server-side (webhook), and only then mark the order as paid.
- */
-async function processPayment(
-  orderRef: string,
-  amount: number
-): Promise<{ paid: boolean; provider: string }> {
-  const provider = process.env.PAYMENT_PROVIDER ?? "mock";
-  // TODO: replace with a real charge/payment-intent against `provider`.
-  console.info("[aurum] MOCK payment", { orderRef, amount, provider });
-  return { paid: true, provider };
-}
 
 function receiptRows(items: LineItem[]): string {
   return items
@@ -128,19 +105,47 @@ export async function POST(request: Request) {
   const total = subtotal + INSURED_SHIPPING;
   const orderRef = `AUR-${Date.now().toString(36).toUpperCase()}`;
 
-  // --- Payment (placeholder) ---
-  const payment = await processPayment(orderRef, total);
-  if (!payment.paid) {
-    return NextResponse.json({ error: "Payment failed." }, { status: 402 });
+  // --- Payment (pluggable provider; see lib/payments.ts) ---
+  const payment = await createPayment({
+    orderRef,
+    amount: total,
+    currency: "USD",
+    customerEmail: customer.email,
+    description: lineItems.map((l) => `${l.name} ×${l.qty}`).join(", "),
+  });
+
+  if (payment.status === "failed") {
+    return NextResponse.json(
+      { error: "Payment could not be initiated. Please try again." },
+      { status: 402 }
+    );
   }
 
   // TODO (client): persist the order to a database/order-management system here.
   console.info("[aurum] order placed", {
     orderRef,
     total,
+    provider: payment.provider,
+    status: payment.status,
     customer: customer.email,
     items: lineItems.map((l) => `${l.id}×${l.qty}`),
   });
+
+  // Hosted provider (e.g. Coinbase): the buyer pays on the provider's page and
+  // payment is confirmed via webhook. Send the redirect URL; do NOT email a
+  // "paid" receipt yet.
+  // TODO (client): handle the provider webhook in app/api/payments/webhook to
+  // verify payment, mark the order paid, and send the receipt then.
+  if (payment.status === "redirect" && payment.hostedUrl) {
+    return NextResponse.json({
+      ok: true,
+      provider: payment.provider,
+      orderRef,
+      redirectUrl: payment.hostedUrl,
+      total,
+      currency: "USD",
+    });
+  }
 
   // --- Order confirmation emails (receipt + internal notification) ---
   const summary = `
@@ -189,6 +194,9 @@ export async function POST(request: Request) {
     shipping: INSURED_SHIPPING,
     total,
     currency: "USD",
-    note: "Mock checkout — no funds were charged. Integrate a precious-metals-friendly provider before launch.",
+    note:
+      payment.provider === "mock"
+        ? "Mock checkout — no funds were charged. Integrate a precious-metals-friendly provider before launch."
+        : undefined,
   });
 }
