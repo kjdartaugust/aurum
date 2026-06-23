@@ -94,7 +94,10 @@ export async function POST(request: Request) {
 
   if (payment.status === "failed") {
     return NextResponse.json(
-      { error: "Payment could not be initiated. Please try again." },
+      {
+        error:
+          payment.error ?? "Payment could not be initiated. Please try again.",
+      },
       { status: 402 }
     );
   }

@@ -35,6 +35,8 @@ export interface PaymentResult {
   provider: string;
   hostedUrl?: string;
   reference?: string;
+  /** Human-readable reason when status is "failed" (surfaced for debugging). */
+  error?: string;
 }
 
 export function activeProvider(): string {
@@ -65,10 +67,14 @@ export async function createPayment(
   }
 
   if (!result) {
-    // Provider selected but unavailable/misconfigured: fail closed rather than
+    // Provider selected but no key configured: fail closed rather than
     // silently "selling" gold for free.
-    console.error(`[aurum] payment provider "${provider}" unavailable`);
-    return { status: "failed", provider };
+    console.error(`[aurum] payment provider "${provider}" not configured`);
+    return {
+      status: "failed",
+      provider,
+      error: `${provider} is selected but its API key is not set.`,
+    };
   }
   return result;
 }
@@ -77,6 +83,9 @@ export async function createPayment(
 async function paystack(order: PaymentOrder): Promise<PaymentResult | null> {
   const key = process.env.PAYSTACK_SECRET_KEY;
   if (!key) return null;
+  // Paystack accounts are currency-scoped (e.g. a Ghana account uses GHS).
+  // Override the store currency for Paystack via PAYSTACK_CURRENCY.
+  const currency = process.env.PAYSTACK_CURRENCY ?? "GHS";
   try {
     const res = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
@@ -87,23 +96,23 @@ async function paystack(order: PaymentOrder): Promise<PaymentResult | null> {
       body: JSON.stringify({
         email: order.customerEmail,
         amount: subunits(order.amount),
-        currency: order.currency,
+        currency,
         reference: order.orderRef,
         callback_url: successUrl(order.orderRef),
         metadata: { description: order.description },
       }),
     });
-    if (!res.ok) {
-      console.error("[aurum] paystack init failed", res.status);
-      return null;
-    }
-    const json = await res.json();
+    const json = await res.json().catch(() => ({}));
     const url = json?.data?.authorization_url;
-    if (!url) return null;
+    if (!res.ok || !url) {
+      const msg = json?.message ?? `Paystack HTTP ${res.status}`;
+      console.error("[aurum] paystack init failed", res.status, msg);
+      return { status: "failed", provider: "paystack", error: msg };
+    }
     return { status: "redirect", provider: "paystack", hostedUrl: url };
   } catch (e) {
     console.error("[aurum] paystack error", e);
-    return null;
+    return { status: "failed", provider: "paystack", error: "Network error reaching Paystack." };
   }
 }
 
