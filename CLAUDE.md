@@ -60,9 +60,16 @@ If `npm install` hits TLS/cert errors on this machine, prefix with
     `products` (never trusts client prices), validates customer/delivery, then
     calls `createPayment()` from **`lib/payments.ts`** (pluggable provider).
     `mock` (default) confirms instantly and emails receipt + internal
-    notification; a hosted provider (`coinbase`) returns a `redirectUrl` and
-    payment is confirmed later via `app/api/payments/webhook` (stub) — no receipt
-    until then. Rate-limited.
+    notification; hosted providers (`paystack`/`coinbase`/`stripe`) return a
+    `redirectUrl`, and payment is confirmed via `app/api/payments/webhook`
+    (real HMAC signature verification per provider) which calls `fulfilOrder`.
+    Rate-limited.
+
+- **Orders & receipts: `lib/orders.ts`.** `saveOrder` (called at checkout),
+  `fulfilOrder` (idempotent; called by the webhook — marks paid + emails
+  receipt), and `sendOrderEmails`. The store is **in-memory** — TODO: move to
+  Vercel KV / a DB so a webhook on another instance finds the order. The cart
+  page handles the `?status=success&ref=` redirect-back from hosted providers.
 
 - **Payments are abstracted in `lib/payments.ts`.** Switch providers with the
   `PAYMENT_PROVIDER` env var; the checkout route and UI don't change. Bullion is

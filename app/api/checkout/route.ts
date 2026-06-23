@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { getProduct } from "@/data/products";
-import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
 import { rateLimit, clientIp } from "@/lib/rate-limit";
 import { createPayment } from "@/lib/payments";
-import { business } from "@/data/business";
-import { formatUSD } from "@/lib/format";
+import { saveOrder, sendOrderEmails, type Order, type OrderLineItem } from "@/lib/orders";
 
 interface Customer {
   name?: string;
@@ -20,28 +18,8 @@ interface CheckoutBody {
   customer?: Customer;
 }
 
-interface LineItem {
-  id: string;
-  name: string;
-  qty: number;
-  unitPrice: number;
-  lineTotal: number;
-}
-
 const INSURED_SHIPPING = 75;
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-
-function receiptRows(items: LineItem[]): string {
-  return items
-    .map(
-      (li) =>
-        `<tr>
-          <td style="padding:6px 0;color:#e4e4e7">${escapeHtml(li.name)} × ${li.qty}</td>
-          <td style="padding:6px 0;text-align:right;color:#e4e4e7">${formatUSD(li.lineTotal)}</td>
-        </tr>`
-    )
-    .join("");
-}
 
 export async function POST(request: Request) {
   if (rateLimit(`checkout:${clientIp(request)}`, { max: 10, windowMs: 60_000 })) {
@@ -79,7 +57,7 @@ export async function POST(request: Request) {
 
   // Re-price the cart server-side from the catalog. Never trust client prices.
   let subtotal = 0;
-  const lineItems: LineItem[] = [];
+  const lineItems: OrderLineItem[] = [];
   for (const item of items) {
     const product = getProduct(item.id);
     if (!product || product.price == null || !product.buyable) continue;
@@ -121,21 +99,30 @@ export async function POST(request: Request) {
     );
   }
 
-  // TODO (client): persist the order to a database/order-management system here.
-  console.info("[aurum] order placed", {
+  const order: Order = {
+    orderRef,
+    customer: customer as Order["customer"],
+    lineItems,
+    subtotal,
+    shipping: INSURED_SHIPPING,
+    total,
+    currency: "USD",
+    provider: payment.provider,
+    status: payment.status === "paid" ? "paid" : "pending",
+  };
+  // Persist so the webhook can look the order up to fulfil it later.
+  saveOrder(order);
+
+  console.info("[aurum] order created", {
     orderRef,
     total,
     provider: payment.provider,
-    status: payment.status,
-    customer: customer.email,
-    items: lineItems.map((l) => `${l.id}×${l.qty}`),
+    status: order.status,
   });
 
-  // Hosted provider (e.g. Coinbase): the buyer pays on the provider's page and
-  // payment is confirmed via webhook. Send the redirect URL; do NOT email a
-  // "paid" receipt yet.
-  // TODO (client): handle the provider webhook in app/api/payments/webhook to
-  // verify payment, mark the order paid, and send the receipt then.
+  // Hosted provider (paystack/coinbase/stripe): buyer pays on the provider page;
+  // payment is confirmed asynchronously in app/api/payments/webhook, which sends
+  // the receipt. Here we only hand back the redirect URL.
   if (payment.status === "redirect" && payment.hostedUrl) {
     return NextResponse.json({
       ok: true,
@@ -147,43 +134,8 @@ export async function POST(request: Request) {
     });
   }
 
-  // --- Order confirmation emails (receipt + internal notification) ---
-  const summary = `
-    <table style="width:100%;font-size:14px;border-collapse:collapse">
-      ${receiptRows(lineItems)}
-      <tr><td style="padding:6px 0;border-top:1px solid #26262d;color:#a1a1aa">Insured delivery</td>
-        <td style="padding:6px 0;border-top:1px solid #26262d;text-align:right;color:#a1a1aa">${formatUSD(INSURED_SHIPPING)}</td></tr>
-      <tr><td style="padding:8px 0;color:#fafafa;font-weight:700">Total</td>
-        <td style="padding:8px 0;text-align:right;color:#e6c878;font-weight:700">${formatUSD(total)}</td></tr>
-    </table>`;
-
-  await sendEmail({
-    to: customer.email,
-    subject: `Your Aurum order ${orderRef}`,
-    html: emailLayout(
-      `Order confirmed — ${orderRef}`,
-      `<p style="color:#a1a1aa;margin:0 0 16px">Thank you, ${escapeHtml(
-        customer.name
-      )}. We've received your order and our vault team will arrange insured delivery to:</p>
-       <p style="color:#e4e4e7;margin:0 0 18px">${escapeHtml(customer.address)}, ${escapeHtml(
-        customer.city
-      )}, ${escapeHtml(customer.country)}</p>
-       ${summary}`
-    ),
-  });
-
-  // Internal notification (best-effort).
-  await sendEmail({
-    to: process.env.NEXT_PUBLIC_INQUIRY_EMAIL ?? business.email,
-    replyTo: customer.email,
-    subject: `New order ${orderRef} — ${formatUSD(total)}`,
-    html: emailLayout(
-      `New order ${orderRef}`,
-      `<p style="color:#a1a1aa">From ${escapeHtml(customer.name)} (${escapeHtml(
-        customer.email
-      )}, ${escapeHtml(customer.phone ?? "no phone")})</p>${summary}`
-    ),
-  });
+  // Mock provider: settled instantly — send the receipt now.
+  await sendOrderEmails(order);
 
   return NextResponse.json({
     ok: true,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import SafeImage from "@/components/SafeImage";
 import { useCart } from "@/context/CartContext";
@@ -9,9 +9,11 @@ import { formatUSD } from "@/lib/format";
 
 interface OrderResult {
   orderRef: string;
-  total: number;
-  provider: string;
-  email: string;
+  total?: number;
+  provider?: string;
+  email?: string;
+  /** True when the buyer returned from a hosted provider (paystack/coinbase/stripe). */
+  returned?: boolean;
 }
 
 interface Customer {
@@ -42,6 +44,24 @@ export default function CartPage() {
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<Customer>(emptyCustomer);
   const [confirmed, setConfirmed] = useState(false);
+
+  // Handle the redirect back from a hosted provider (Paystack/Coinbase/Stripe).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get("status");
+    const ref = params.get("ref");
+    if (status === "success" && ref) {
+      setOrder({ orderRef: ref, returned: true });
+      clear();
+    } else if (status === "cancelled") {
+      setError("Payment was cancelled. Your cart has been kept.");
+    }
+    // Tidy the URL so a refresh doesn't re-trigger this.
+    if (status) {
+      window.history.replaceState({}, "", "/cart");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const lineItems = items
     .map((i) => ({ item: i, product: getProduct(i.id) }))
@@ -93,24 +113,34 @@ export default function CartPage() {
             ✓
           </div>
           <h1 className="mt-6 font-serif text-3xl text-zinc-50">
-            Order confirmed
+            {order.returned ? "Payment received" : "Order confirmed"}
           </h1>
           <p className="mt-3 text-zinc-400">
             Reference{" "}
-            <span className="font-medium text-gold-light">{order.orderRef}</span>.
-            Total{" "}
-            <span className="font-medium text-zinc-100">
-              {formatUSD(order.total)}
-            </span>
-            . A receipt has been sent to{" "}
-            <span className="text-zinc-200">{order.email}</span> and our vault
-            team will arrange insured delivery.
+            <span className="font-medium text-gold-light">{order.orderRef}</span>
+            {order.total != null && (
+              <>
+                . Total{" "}
+                <span className="font-medium text-zinc-100">
+                  {formatUSD(order.total)}
+                </span>
+              </>
+            )}
+            . A receipt has been emailed
+            {order.email ? (
+              <>
+                {" "}
+                to <span className="text-zinc-200">{order.email}</span>
+              </>
+            ) : null}{" "}
+            and our vault team will arrange insured delivery.
           </p>
-          <p className="mt-4 rounded-xl border border-gold/20 bg-gold/5 p-3 text-xs text-zinc-400">
-            Demo checkout via <strong>{order.provider}</strong> — no funds were
-            charged. A precious-metals-friendly payment provider is required for
-            production.
-          </p>
+          {order.provider === "mock" && (
+            <p className="mt-4 rounded-xl border border-gold/20 bg-gold/5 p-3 text-xs text-zinc-400">
+              Demo checkout via <strong>mock</strong> — no funds were charged. A
+              real payment provider is required for production.
+            </p>
+          )}
           <Link href="/products" className="btn-gold mt-8">
             Continue browsing
           </Link>
