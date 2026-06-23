@@ -67,7 +67,12 @@ export default function CartPage() {
     .map((i) => ({ item: i, product: getProduct(i.id) }))
     .filter((x) => x.product && x.product.price != null && x.product.buyable);
 
-  const total = subtotal + (subtotal > 0 ? INSURED_SHIPPING : 0);
+  // Test items ship free (mirrors the server); real gold keeps the insured fee.
+  const allTest =
+    lineItems.length > 0 &&
+    lineItems.every((x) => x.product!.id.startsWith("test-"));
+  const shipping = subtotal > 0 && !allTest ? INSURED_SHIPPING : 0;
+  const total = subtotal + shipping;
   const needsKyc = total >= KYC_THRESHOLD;
 
   function update(field: keyof Customer, value: string) {
@@ -317,7 +322,10 @@ export default function CartPage() {
             <h2 className="font-serif text-xl text-zinc-100">Order summary</h2>
             <div className="mt-5 space-y-3 text-sm">
               <Row label="Subtotal" value={formatUSD(subtotal)} />
-              <Row label="Insured delivery" value={formatUSD(INSURED_SHIPPING)} />
+              <Row
+                label="Insured delivery"
+                value={shipping === 0 ? "Free" : formatUSD(shipping)}
+              />
               <div className="hairline my-2" />
               <Row label="Total" value={formatUSD(total)} emphasize />
             </div>

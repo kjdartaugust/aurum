@@ -80,7 +80,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const total = subtotal + INSURED_SHIPPING;
+  // Test items ship free so live-payment checks stay tiny; real gold keeps the
+  // flat insured-courier fee.
+  const allTest = lineItems.every((l) => l.id.startsWith("test-"));
+  const shipping = allTest ? 0 : INSURED_SHIPPING;
+  const total = subtotal + shipping;
   const orderRef = `AUR-${Date.now().toString(36).toUpperCase()}`;
 
   // --- Payment (pluggable provider; see lib/payments.ts) ---
@@ -107,7 +111,7 @@ export async function POST(request: Request) {
     customer: customer as Order["customer"],
     lineItems,
     subtotal,
-    shipping: INSURED_SHIPPING,
+    shipping,
     total,
     currency: "USD",
     provider: payment.provider,
@@ -146,7 +150,7 @@ export async function POST(request: Request) {
     orderRef,
     lineItems,
     subtotal,
-    shipping: INSURED_SHIPPING,
+    shipping,
     total,
     currency: "USD",
     note:
