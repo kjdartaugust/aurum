@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     status: payment.status === "paid" ? "paid" : "pending",
   };
   // Persist so the webhook can look the order up to fulfil it later.
-  saveOrder(order);
+  await saveOrder(order);
 
   console.info("[aurum] order created", {
     orderRef,

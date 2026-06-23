@@ -1,6 +1,7 @@
 import { sendEmail, emailLayout, escapeHtml } from "@/lib/email";
 import { business } from "@/data/business";
 import { formatUSD } from "@/lib/format";
+import { kvEnabled, kvGet, kvSet, kvSetNx } from "@/lib/kv";
 
 export interface OrderLineItem {
   id: string;
@@ -32,63 +33,82 @@ export interface Order {
 }
 
 /**
- * In-memory order store.
- *
- * ⚠️ TODO (client) for production: this lives in a single serverless instance's
- * memory, so a webhook that lands on a *different* instance than checkout won't
- * find the order. Swap this for a shared store — Vercel KV / Upstash Redis or a
- * database — keyed by orderRef. The function signatures below can stay the same.
+ * Order store. Uses Vercel KV when configured (durable, shared across all
+ * serverless instances), otherwise an in-memory Map for local/dev. Records
+ * expire after 30 days to avoid unbounded growth.
  */
-const orders = new Map<string, Order>();
-const fulfilled = new Set<string>();
+const TTL_SECONDS = 60 * 60 * 24 * 30;
+const memOrders = new Map<string, Order>();
+const memFulfilled = new Set<string>();
 
-export function saveOrder(order: Order): void {
-  orders.set(order.orderRef, order);
+export async function saveOrder(order: Order): Promise<void> {
+  if (kvEnabled) {
+    await kvSet(`order:${order.orderRef}`, JSON.stringify(order), TTL_SECONDS);
+  } else {
+    memOrders.set(order.orderRef, order);
+  }
 }
 
-export function getOrder(ref: string): Order | undefined {
-  return orders.get(ref);
+export async function getOrder(ref: string): Promise<Order | undefined> {
+  if (kvEnabled) {
+    const raw = await kvGet(`order:${ref}`);
+    return raw ? (JSON.parse(raw) as Order) : undefined;
+  }
+  return memOrders.get(ref);
+}
+
+/** Claim the one-time right to fulfil `ref`. Returns false if already claimed. */
+async function claimFulfilment(ref: string): Promise<boolean> {
+  if (kvEnabled) {
+    return kvSetNx(`fulfilled:${ref}`, "1", TTL_SECONDS);
+  }
+  if (memFulfilled.has(ref)) return false;
+  memFulfilled.add(ref);
+  return true;
 }
 
 /**
  * Mark an order paid and send confirmation emails. Idempotent — providers may
  * deliver the same webhook more than once. `fallback` lets us still email a
- * basic receipt if the order record isn't in this instance's memory.
+ * basic receipt if the order record can't be found.
  */
 export async function fulfilOrder(
   ref: string,
   fallback?: { email?: string; total?: number; currency?: string }
 ): Promise<boolean> {
-  if (fulfilled.has(ref)) return true;
+  const order = await getOrder(ref);
 
-  const order = orders.get(ref);
+  // Nothing we can do — don't consume the idempotency claim, so a later retry
+  // (e.g. after the order record propagates) can still succeed.
+  if (!order && !fallback?.email) {
+    console.warn("[aurum] fulfilOrder: order not found and no fallback", ref);
+    return false;
+  }
+
+  // Only act once, even across duplicate webhook deliveries.
+  if (!(await claimFulfilment(ref))) return true;
+
   if (order) {
     order.status = "paid";
-    fulfilled.add(ref);
+    if (kvEnabled) {
+      await kvSet(`order:${ref}`, JSON.stringify(order), TTL_SECONDS);
+    }
     await sendOrderEmails(order);
     return true;
   }
 
-  // Order not found in this instance — send a minimal receipt if we can.
-  if (fallback?.email) {
-    fulfilled.add(ref);
-    await sendEmail({
-      to: fallback.email,
-      subject: `Payment received — order ${ref}`,
-      html: emailLayout(
-        `Payment received — ${ref}`,
-        `<p style="color:#a1a1aa">We've received your payment${
-          fallback.total != null
-            ? ` of ${formatUSD(fallback.total)}`
-            : ""
-        }. Our vault team will arrange insured delivery and follow up shortly.</p>`
-      ),
-    });
-    return true;
-  }
-
-  console.warn("[aurum] fulfilOrder: order not found and no fallback", ref);
-  return false;
+  // Order record unavailable — send a minimal receipt from event data.
+  await sendEmail({
+    to: fallback!.email!,
+    subject: `Payment received — order ${ref}`,
+    html: emailLayout(
+      `Payment received — ${ref}`,
+      `<p style="color:#a1a1aa">We've received your payment${
+        fallback!.total != null ? ` of ${formatUSD(fallback!.total)}` : ""
+      }. Our vault team will arrange insured delivery and follow up shortly.</p>`
+    ),
+  });
+  return true;
 }
 
 function summaryTable(order: Order): string {

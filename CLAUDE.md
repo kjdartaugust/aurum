@@ -66,10 +66,11 @@ If `npm install` hits TLS/cert errors on this machine, prefix with
     Rate-limited.
 
 - **Orders & receipts: `lib/orders.ts`.** `saveOrder` (called at checkout),
-  `fulfilOrder` (idempotent; called by the webhook — marks paid + emails
-  receipt), and `sendOrderEmails`. The store is **in-memory** — TODO: move to
-  Vercel KV / a DB so a webhook on another instance finds the order. The cart
-  page handles the `?status=success&ref=` redirect-back from hosted providers.
+  `fulfilOrder` (idempotent via a one-time claim; called by the webhook — marks
+  paid + emails receipt), and `sendOrderEmails`. Backed by **Vercel KV** when
+  `KV_REST_API_URL`/`KV_REST_API_TOKEN` are set (see `lib/kv.ts`, a dependency-free
+  REST client), else an in-memory Map for dev. The cart page handles the
+  `?status=success&ref=` redirect-back from hosted providers.
 
 - **Payments are abstracted in `lib/payments.ts`.** Switch providers with the
   `PAYMENT_PROVIDER` env var; the checkout route and UI don't change. Bullion is
