@@ -83,9 +83,14 @@ export async function createPayment(
 async function paystack(order: PaymentOrder): Promise<PaymentResult | null> {
   const key = process.env.PAYSTACK_SECRET_KEY;
   if (!key) return null;
-  // Paystack accounts are currency-scoped (e.g. a Ghana account uses GHS).
-  // Override the store currency for Paystack via PAYSTACK_CURRENCY.
+  // The storefront prices in USD, but a Ghana Paystack account charges in GHS.
+  // Convert the USD total to the charge currency at a configurable rate.
+  // TODO (client): keep PAYSTACK_USD_TO_GHS roughly in line with the market rate
+  // (or swap in a live FX lookup). It's ignored if you charge in USD.
   const currency = process.env.PAYSTACK_CURRENCY ?? "GHS";
+  const rate = Number(process.env.PAYSTACK_USD_TO_GHS ?? "15.5") || 15.5;
+  const chargeAmount =
+    currency.toUpperCase() === "USD" ? order.amount : order.amount * rate;
   try {
     const res = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
@@ -95,11 +100,11 @@ async function paystack(order: PaymentOrder): Promise<PaymentResult | null> {
       },
       body: JSON.stringify({
         email: order.customerEmail,
-        amount: subunits(order.amount),
+        amount: subunits(chargeAmount),
         currency,
         reference: order.orderRef,
         callback_url: successUrl(order.orderRef),
-        metadata: { description: order.description },
+        metadata: { description: order.description, usdAmount: order.amount },
       }),
     });
     const json = await res.json().catch(() => ({}));
