@@ -1,4 +1,5 @@
 import { SITE_URL } from "@/lib/site";
+import { getUsdToGhs } from "@/lib/fx";
 
 /**
  * PAYMENT PROVIDER ABSTRACTION
@@ -84,13 +85,12 @@ async function paystack(order: PaymentOrder): Promise<PaymentResult | null> {
   const key = process.env.PAYSTACK_SECRET_KEY;
   if (!key) return null;
   // The storefront prices in USD, but a Ghana Paystack account charges in GHS.
-  // Convert the USD total to the charge currency at a configurable rate.
-  // TODO (client): keep PAYSTACK_USD_TO_GHS roughly in line with the market rate
-  // (or swap in a live FX lookup). It's ignored if you charge in USD.
+  // Convert using a live FX rate (falls back to PAYSTACK_USD_TO_GHS env).
   const currency = process.env.PAYSTACK_CURRENCY ?? "GHS";
-  const rate = Number(process.env.PAYSTACK_USD_TO_GHS ?? "15.5") || 15.5;
   const chargeAmount =
-    currency.toUpperCase() === "USD" ? order.amount : order.amount * rate;
+    currency.toUpperCase() === "USD"
+      ? order.amount
+      : order.amount * (await getUsdToGhs());
   try {
     const res = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
